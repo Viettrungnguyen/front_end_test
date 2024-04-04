@@ -6,6 +6,7 @@ import CreateAccount from "@/components/CreateAccount.vue";
 import UpdateAccount from "@/components/UpdateAccount.vue";
 import ShowSerialpaso from "@/components/ShowSerialpaso.vue";
 import CompareFolders from "@/components/CompareFolders.vue";
+import VueTest from "@/components/TestLayout.vue";
 
 Vue.use(Router);
 
@@ -33,6 +34,11 @@ export default new Router({
       path: "/compare-folders",
       name: "test3",
       component: CompareFolders,
+    },
+    {
+      path: "/vue-test",
+      name: "vue-test",
+      component: VueTest,
     },
   ],
 });
