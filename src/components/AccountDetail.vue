@@ -1,8 +1,17 @@
 <template>
-  <div>
+  <div class="container">
     <h1>Account Detail</h1>
-    <p><strong>Name:</strong> {{ account.login }}</p>
-    <p><strong>Phone:</strong> {{ account.phone }}</p>
+    <div class="card">
+      <div class="card-body">
+        <p><strong>Name:</strong> {{ account.login }}</p>
+        <p><strong>Phone:</strong> {{ account.phone }}</p>
+        <router-link
+          :to="{ name: 'update-account', params: { id: account.registerID } }"
+          class="btn btn-primary"
+          >Edit</router-link
+        >
+      </div>
+    </div>
   </div>
 </template>
 
@@ -14,6 +23,7 @@ export default {
     return {
       account: {
         login: "",
+        registerID: "",
         phone: "",
       },
     };
@@ -36,3 +46,9 @@ export default {
   },
 };
 </script>
+
+<style>
+.card {
+  margin-top: 20px;
+}
+</style>

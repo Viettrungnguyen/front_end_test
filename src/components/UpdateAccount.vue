@@ -1,24 +1,52 @@
 <template>
-  <div>
+  <div class="container">
     <h1>Update Account</h1>
-    <form @submit.prevent="updateAccount">
-      <label>Name:</label>
-      <input type="text" v-model="name" required />
-      <label>Email:</label>
-      <input type="email" v-model="email" required />
-      <button type="submit">Update</button>
+    <form @submit.prevent="updateAccount" class="needs-validation" novalidate>
+      <div class="form-group">
+        <label for="login">Login:</label>
+        <input
+          type="text"
+          id="login"
+          v-model="login"
+          class="form-control"
+          required
+        />
+        <div class="invalid-feedback">Login is required.</div>
+      </div>
+      <div class="form-group">
+        <label for="password">Password:</label>
+        <input
+          type="password"
+          id="password"
+          v-model="password"
+          class="form-control"
+          required
+        />
+        <div class="invalid-feedback">Password is required.</div>
+      </div>
+      <div class="form-group">
+        <label for="phone">Phone:</label>
+        <input type="text" id="phone" v-model="phone" class="form-control" />
+        <div class="invalid-feedback">Phone is required.</div>
+      </div>
+      <button type="submit" class="btn btn-primary my-2">Update</button>
     </form>
   </div>
 </template>
 
 <script>
 import axios from "axios";
+import Vue from "vue";
+import VueToast from "vue-toast-notification";
+import "vue-toast-notification/dist/theme-bootstrap.css";
+Vue.use(VueToast);
 
 export default {
   data() {
     return {
-      name: "",
-      email: "",
+      login: "",
+      password: "",
+      phone: "",
     };
   },
   mounted() {
@@ -30,26 +58,33 @@ export default {
       axios
         .get(`${process.env.VUE_APP_API_URL}/accounts/${accountId}`)
         .then((response) => {
-          this.name = response.data.name;
-          this.email = response.data.email;
+          this.login = response.data.login;
+          this.password = response.data.password;
+          this.phone = response.data.phone;
         })
         .catch((error) => {
-          console.error("Error fetching account details:", error);
+          const errorKeys = Object.keys(error.response.data.error);
+          errorKeys.forEach((key) => {
+            Vue.$toast.error(error.response.data.error[key][0]);
+          });
         });
     },
     updateAccount() {
       const accountId = this.$route.params.id;
       axios
-        .put(`${process.env.VUE_APP_API_URL}/accounts/${accountId}`, {
-          name: this.name,
-          email: this.email,
+        .post(`${process.env.VUE_APP_API_URL}/accounts/${accountId}`, {
+          login: this.login,
+          password: this.password,
+          phone: this.phone,
         })
-        .then((response) => {
-          console.log("Account updated successfully:", response.data);
-          // Optionally, redirect to account list or perform other actions
+        .then(() => {
+          Vue.$toast.success("Account updated successfully");
         })
         .catch((error) => {
-          console.error("Error updating account:", error);
+          const errorKeys = Object.keys(error.response.data.error);
+          errorKeys.forEach((key) => {
+            Vue.$toast.error(error.response.data.error[key][0]);
+          });
         });
     },
   },
