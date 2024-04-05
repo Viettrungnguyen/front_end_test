@@ -482,6 +482,10 @@ th {
   transition: opacity 0.3s ease;
 }
 
+.enlarge-text  i {
+  color: white;
+}
+
 .content-text {
   position: absolute;
   top: 50%;
