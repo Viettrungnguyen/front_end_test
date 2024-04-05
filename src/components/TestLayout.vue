@@ -255,9 +255,12 @@ export default {
   methods: {
     selectOption(option) {
       this.selectAll = false;
-      this.selectedItem = [];
-      this.selectedImages = [];
       this.selectedOption = option;
+      const mergedChildren = option.children.reduce((accumulator, child) => {
+        return accumulator.concat(child.children);
+      }, []);
+      this.selectedItem = { children: mergedChildren };
+      this.selectedImages = [];
     },
     showDetails(item) {
       this.selectAll = false;
