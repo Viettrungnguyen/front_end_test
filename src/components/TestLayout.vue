@@ -3,10 +3,12 @@
     <div class="row">
       <div class="col-md-3">
         <div class="sidebar">
-          <div class="my-5">
+          <div class="my-4">
             <div class="d-flex justify-content-between my-3">
-              <span>Storage</span>
-              <a href="javascript:void(0)">Change plan</a>
+              <span class="text-secondary">Storage</span>
+              <a class="text-secondary" href="javascript:void(0)"
+                >Change plan</a
+              >
             </div>
             <div class="progress">
               <div
@@ -19,28 +21,44 @@
               ></div>
             </div>
             <p>
-              {{ Math.round(progressPercentage) + "%" }}
+              <span class="text-primary fw-bold mx-1">{{
+                Math.round(progressPercentage) + "%"
+              }}</span>
               <span>used of 2GB</span>
             </p>
           </div>
-
-          <div>
-            <p>Search</p>
+          <hr />
+          <div class="my-4">
+            <p class="text-secondary">Search</p>
             <input
               type="text"
               v-model="searchTerm"
-              class="form-control mb-3"
+              class="form-control mb-4"
               placeholder="e.g. image.png"
             />
           </div>
+          <hr />
           <div>
             <div class="d-flex justify-content-between my-3">
-              <span>Folder</span>
-              <a href="javascript:void(0)">New folder</a>
+              <span class="text-secondary">Folder</span>
+              <a class="text-secondary" href="javascript:void(0)">New folder</a>
             </div>
             <div v-for="option in options" :key="option.id">
-              <div @click="selectOption(option)" class="btn btn-primary mb-2">
-                {{ option.name }} <span>({{ option.children.length }})</span>
+              <div
+                @click="selectOption(option)"
+                class="option fw-bold mb-2"
+                :class="{ 'active-div-option': option === selectedOption }"
+              >
+                <i
+                  v-if="option === selectedOption"
+                  class="bi bi-caret-up-fill me-2"
+                ></i>
+                <i v-else class="bi bi-caret-right-fill me-2"></i>
+                <span
+                  ><i class="bi bi-folder-fill"></i
+                  ><span class="mx-2">{{ option.name }}</span></span
+                >
+                <span class="option-count">{{ option.children.length }}</span>
               </div>
               <div v-if="selectedOption && selectedOption.id === option.id">
                 <ul class="list-group">
@@ -48,23 +66,35 @@
                     v-for="child in option.children"
                     :key="child.id"
                     class="list-group-item"
+                    :class="{ 'active-option': child === selectedItem }"
+                    @click="showDetails(child)"
                   >
                     <button
                       @click="showDetails(child)"
-                      class="btn btn-light btn-block"
+                      class="btn btn-light btn-block d-flex w-100 justify-content-between"
                     >
-                      {{ child.name }}
-                      <span>({{ child.children.length }})</span>
+                      <span
+                        ><i class="bi bi-caret-right-fill me-2"></i>
+                        <i class="bi bi-folder-fill"></i
+                        ><span class="mx-2">{{ child.name }}</span></span
+                      >
+                      <span class="option-count">{{
+                        child.children.length
+                      }}</span>
                     </button>
                   </li>
                 </ul>
               </div>
             </div>
           </div>
+          <hr />
           <div class="d-flex justify-content-between my-3">
-            <span>Members</span>
+            <span class="text-secondary">Members</span>
             <div>
-              <a href="javascript:void(0)" @click="selectAllPhotosByChanged"
+              <a
+                class="text-secondary"
+                href="javascript:void(0)"
+                @click="selectAllPhotosByChanged"
                 >Select all</a
               >
             </div>
@@ -93,11 +123,17 @@
                   v-model="selectAll"
                   @change="selectAllImages"
                 />
-                <span class="mx-4">Select all</span>
+                <span class="ms-3">Select all</span>
               </th>
-              <th @click="sortBy('name')">Name</th>
-              <th @click="sortBy('dimension')">Dimension</th>
-              <th @click="sortBy('size')">Size</th>
+              <th @click="sortBy('name')">
+                Name<i class="bi bi-arrows-vertical"></i>
+              </th>
+              <th @click="sortBy('dimension')">
+                Dimension<i class="bi bi-arrows-vertical"></i>
+              </th>
+              <th @click="sortBy('size')">
+                Size<i class="bi bi-arrows-vertical"></i>
+              </th>
             </tr>
           </thead>
           <tbody v-if="selectedItem != null">
@@ -108,25 +144,18 @@
                   v-model="selectedImages"
                   :value="child.id"
                 />
-                <div>
-                  <img
-                    :src="child.url"
-                    alt="Image"
-                    style="
-                      max-width: 100px;
-                      cursor: pointer;
-                      border-radius: 10px;
-                    "
-                    @click="openModal(child.url)"
-                    @mouseover="showEnlargeText(child.id)"
-                    @mouseleave="hideEnlargeText(child.id)"
-                  />
-                  <span
-                    v-if="child.id === hoveredImageId && isEnlargeTextVisible"
-                    class="enlarge-text"
-                  >
-                    Enlarge
-                  </span>
+                <div
+                  class="image-container"
+                  @mouseover="hoveredImageId = child.id"
+                  @click="showImage(child)"
+                  @mouseleave="hoveredImageId = null"
+                >
+                  <img :src="child.url" alt="Image" class="image" />
+                  <div class="enlarge-text" v-if="hoveredImageId === child.id">
+                    <div class="content-text">
+                      Enlarge <i class="bi bi-arrows-angle-expand"></i>
+                    </div>
+                  </div>
                 </div>
               </td>
               <td style="vertical-align: middle">{{ child.name }}</td>
@@ -143,17 +172,25 @@
           </tbody>
         </table>
       </div>
-    </div>
-    <div class="modal" :class="{ 'is-active': isModalOpen }">
-      <div class="modal-background"></div>
-      <div class="modal-content">
-        <img :src="modalImageUrl" class="img-fluid" alt="Full Image" />
+      <div
+        class="modal"
+        :class="{ 'is-active': isModalOpen }"
+        @click="isModalOpen = false"
+      >
+        <div class="modal-background"></div>
+        <div class="modal-content">
+          <button
+            class="modal-close"
+            aria-label="close"
+            @click="isModalOpen = false"
+          ></button>
+          <img
+            :src="modalImageUrl"
+            alt="Full Image"
+            style="max-width: 100%; max-height: 80vh; object-fit: scale-down"
+          />
+        </div>
       </div>
-      <button
-        class="modal-close is-large"
-        aria-label="close"
-        @click="closeModal"
-      ></button>
     </div>
   </div>
 </template>
@@ -252,6 +289,12 @@ export default {
       return Array.from(photoBySet);
     },
   },
+  mounted() {
+    this.selectAllPhotosByChanged();
+    if (this.options.length > 0) {
+      this.selectOption(this.options[0]);
+    }
+  },
   methods: {
     selectOption(option) {
       this.selectAll = false;
@@ -267,22 +310,9 @@ export default {
       this.selectedImages = [];
       this.selectedItem = item;
     },
-    openModal(url) {
-      this.modalImageUrl = url;
+    showImage(item) {
+      this.modalImageUrl = item.url;
       this.isModalOpen = true;
-    },
-    closeModal() {
-      this.isModalOpen = false;
-    },
-    showEnlargeText(id) {
-      this.hoveredImageId = id;
-      this.isEnlargeTextVisible = true;
-    },
-    hideEnlargeText(id) {
-      if (id === this.hoveredImageId) {
-        this.hoveredImageId = null;
-        this.isEnlargeTextVisible = false;
-      }
     },
     selectAllImages() {
       if (this.selectAll && this.selectedItem) {
@@ -322,3 +352,152 @@ export default {
   },
 };
 </script>
+
+<style scoped>
+.option {
+  width: 100%;
+  background: white;
+  border: none;
+  color: black;
+  text-align: left;
+}
+
+.option-count {
+  padding: 0px 5px;
+  border: 1px solid #bdbcbc;
+  background: #bdbcbc;
+  border-radius: 5px;
+  font-size: 14px;
+}
+
+.list-group li {
+  border: none;
+  padding: 2px 0 2px 22px;
+}
+
+.table > :not(caption) > th {
+  color: #6c757d;
+}
+
+.active-option button,
+.active-option i,
+.active-option button:hover {
+  color: #5356ff;
+  background: #dff5ff;
+}
+
+.active-option button .option-count {
+  background: #5356ff;
+  color: white;
+  border-color: #5356ff;
+}
+i {
+  color: #6c757d;
+}
+
+.active-div-option i {
+  color: #000;
+}
+
+thead tr th {
+  color: #6c757d;
+  font-weight: 400;
+}
+th i {
+  font-size: 12px;
+}
+
+td,
+th {
+  border: none;
+}
+
+.modal {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5); /* Background opacity */
+  z-index: 9999;
+}
+
+.modal.is-active {
+  display: flex;
+}
+
+.modal-content {
+  max-width: 1000px;
+  max-height: 80vh;
+  position: relative;
+}
+
+.modal-close {
+  position: absolute;
+  top: -7px;
+  right: -32px;
+  width: 30px;
+  height: 30px;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.modal-close:before {
+  content: "x";
+  font-size: 20px;
+  color: #fff;
+}
+.image-container {
+  position: relative;
+  display: inline-block;
+}
+
+.image {
+  max-width: 200px;
+  cursor: pointer;
+  border-radius: 10px;
+}
+
+.enlarge-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  gap: 10px;
+  align-content: center;
+  justify-content: center;
+  transform: translate(-50%, -50%);
+  background-color: rgba(14, 64, 87, 0.5);
+  color: white;
+  padding: 10px 15px;
+  border-radius: 10px;
+  font-size: 14px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.content-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  gap: 10px;
+  background-color: rgba(36, 166, 226, 0.5);
+  color: white;
+  padding: 10px 15px;
+  border-radius: 10px;
+  font-size: 14px;
+  transition: opacity 0.3s ease;
+}
+
+.image-container:hover .enlarge-text {
+  opacity: 1;
+}
+</style>
