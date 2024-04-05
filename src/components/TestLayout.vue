@@ -6,7 +6,7 @@
           <div class="my-5">
             <div class="d-flex justify-content-between my-3">
               <span>Storage</span>
-              <span>Change plan</span>
+              <a href="javascript:void(0)">Change plan</a>
             </div>
             <div class="progress">
               <div
@@ -30,18 +30,18 @@
               type="text"
               v-model="searchTerm"
               class="form-control mb-3"
-              placeholder="Search..."
-              @input="searchItems"
+              placeholder="e.g. image.png"
             />
           </div>
           <div>
+            <div class="d-flex justify-content-between my-3">
+              <span>Folder</span>
+              <a href="javascript:void(0)">New folder</a>
+            </div>
             <div v-for="option in options" :key="option.id">
-              <button
-                @click="selectOption(option)"
-                class="btn btn-primary mb-2"
-              >
-                {{ option.name }}
-              </button>
+              <div @click="selectOption(option)" class="btn btn-primary mb-2">
+                {{ option.name }} <span>({{ option.children.length }})</span>
+              </div>
               <div v-if="selectedOption && selectedOption.id === option.id">
                 <ul class="list-group">
                   <li
@@ -54,29 +54,32 @@
                       class="btn btn-light btn-block"
                     >
                       {{ child.name }}
+                      <span>({{ child.children.length }})</span>
                     </button>
                   </li>
                 </ul>
               </div>
             </div>
           </div>
-          <!-- Search by photo_by select box -->
           <div class="d-flex justify-content-between my-3">
             <span>Members</span>
             <div>
-              <span @click="selectAllPhotosByChanged">Select all</span>
+              <a href="javascript:void(0)" @click="selectAllPhotosByChanged"
+                >Select all</a
+              >
             </div>
           </div>
           <div>
-            <label v-for="photoBy in uniquePhotoBy" :key="photoBy">
-              <input
-                type="checkbox"
-                v-model="selectedPhotoBy"
-                :value="photoBy"
-                @change="filterOptions"
-              />
-              {{ photoBy }}
-            </label>
+            <div v-for="photoBy in uniquePhotoBy" :key="photoBy">
+              <label>
+                <input
+                  type="checkbox"
+                  v-model="selectedPhotoBy"
+                  :value="photoBy"
+                />
+                {{ photoBy }}
+              </label>
+            </div>
           </div>
         </div>
       </div>
@@ -98,7 +101,7 @@
             </tr>
           </thead>
           <tbody v-if="selectedItem != null">
-            <tr tr v-for="child in sortedItems" :key="child.id">
+            <tr tr v-for="child in filteredOptions" :key="child.id">
               <td class="d-flex gap-3">
                 <input
                   type="checkbox"
@@ -174,7 +177,6 @@ export default {
       storageLimitGB: 2,
       searchTerm: "",
       selectedPhotoBy: [],
-      selectAllPhotosBy: [],
     };
   },
   computed: {
@@ -182,6 +184,8 @@ export default {
       if (!this.sortByColumn) {
         return this.selectedItem.children;
       }
+      console.log(this.selectedItem);
+
       if (this.selectedItem) {
         return this.selectedItem.children.slice().sort((a, b) => {
           let modifier = 1;
@@ -191,7 +195,33 @@ export default {
           return 0;
         });
       }
-      return 0;
+      return [];
+    },
+    filteredOptions() {
+      if (this.sortedItems) {
+        let filteredItems = this.sortedItems;
+        const searchTerm = this.searchTerm.toLowerCase().trim();
+
+        if (
+          this.selectedPhotoBy.includes("All") ||
+          this.selectedPhotoBy.length === 0
+        ) {
+          filteredItems = filteredItems.filter((option) =>
+            this.optionContainsTerm(option, searchTerm)
+          );
+        } else {
+          filteredItems = filteredItems.filter(
+            (option) =>
+              this.optionContainsTerm(option, searchTerm) &&
+              this.selectedPhotoBy.includes(option.photo_by)
+          );
+        }
+        return filteredItems.filter((option) =>
+          this.optionContainsTerm(option, searchTerm)
+        );
+      } else {
+        return this.sortedItems;
+      }
     },
     totalSize() {
       let total = 0;
@@ -225,7 +255,7 @@ export default {
   methods: {
     selectOption(option) {
       this.selectAll = false;
-      this.selectedItem = false;
+      this.selectedItem = [];
       this.selectedImages = [];
       this.selectedOption = option;
     },
@@ -276,45 +306,15 @@ export default {
       const formattedSize = sizeNumber.toLocaleString();
       return formattedSize + " kB";
     },
-    searchItems() {
-      const searchTerm = this.searchTerm.toLowerCase().trim();
-
-      if (searchTerm === "") {
-        this.filteredOptions = this.sortedItems;
-      } else {
-        this.filteredOptions = this.sortedItems.filter((option) =>
-          this.optionContainsTerm(option, searchTerm)
-        );
-      }
-    },
     optionContainsTerm(option, term) {
       return option.name.toLowerCase().includes(term);
     },
     selectAllPhotosByChanged() {
-      if (this.selectAllPhotosBy) {
-        this.selectedPhotoBy = this.uniquePhotoBy;
-      } else {
+      if (this.selectedPhotoBy.length === this.uniquePhotoBy.length) {
         this.selectedPhotoBy = [];
+      } else {
+        this.selectedPhotoBy = [...this.uniquePhotoBy];
       }
-      this.filterOptions();
-    },
-    filterOptions() {
-      // Filter options based on selected photo_by values
-      this.filteredOptions = [];
-      this.options.forEach((option) => {
-        const filteredChildren = option.children.reduce((acc, child) => {
-          const filteredItems = child.children.filter((item) =>
-            this.selectedPhotoBy.includes(item.photo_by)
-          );
-          if (filteredItems.length > 0) {
-            acc.push({ ...child, children: filteredItems });
-          }
-          return acc;
-        }, []);
-        if (filteredChildren.length > 0) {
-          this.filteredOptions.push({ ...option, children: filteredChildren });
-        }
-      });
     },
   },
 };
