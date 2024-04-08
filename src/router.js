@@ -6,7 +6,7 @@ import CreateAccount from "@/components/CreateAccount.vue";
 import UpdateAccount from "@/components/UpdateAccount.vue";
 import ShowSerialpaso from "@/components/ShowSerialpaso.vue";
 import CompareFolders from "@/components/CompareFolders.vue";
-import VueTest from "@/components/TestLayout.vue";
+import VueTest from "@/components/MainComponent.vue";
 
 Vue.use(Router);
 
